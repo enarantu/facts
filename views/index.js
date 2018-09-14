@@ -7,7 +7,7 @@ var escapeHtml = require('escape-html');
 var url = require('url');
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/mult.html');
+  res.sendFile(global.appDir + '/html/game.html');
 });
 
 
