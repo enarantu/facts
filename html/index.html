@@ -1,27 +1,5 @@
-<!doctype html>
 <html>
-  <!-- <a href='./game'>game</a> -->
-  <body>
-  	<a id="d">Hello</a>
-   	<form action="">
-   		Name:<input type="text" id="names" autocomplete="off"><br>
-   		<button>Submit</button>  			
-   	</form>
-<script src="/socket.io/socket.io.js"></script>
-<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-<script>
-  $(function () {
-    var client = io();
-    $('form').submit(function(){
-      // socket.emit('chat message', $('#m').val());
-      client.emit('submit', $('#names').val());
-      $('#names').val('');
-      return false;
-    });
-    client.on('submit', function(name){
-      $('#d').html(name);
-    });
-  });
-</script>
-</body>
+    <body>
+        INDEX
+    </body>
 </html>

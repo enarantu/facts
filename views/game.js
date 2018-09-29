@@ -1,10 +1,6 @@
-var app = require('express')();
-
-
-module.exports = function(app) {
-
-    app.get('/game', function(req, res){
-    res.sendFile(appDir + '/html/game.html');
-    });
-
+module.exports = {
+    game_view :function(req, res){
+        res.sendFile(global.appDir + '/html/game.html');
+    },
 }
+
