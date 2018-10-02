@@ -50,23 +50,28 @@ class Game extends React.Component {
              keys.down  = value;
              break;
         }
-        this.setState({input : keys}) 
+
+        let xt = this.state.x
+        let yt = this.state.y
         if ( keys.up ){
-            this.state.y -= this.state.speed
+            yt -= this.state.speed
         }
         if (keys.down){
-            this.state.y += this.state.speed
+            yt += this.state.speed
         }
         if (keys.left){
-            this.state.x -= this.state.speed
+            xt -= this.state.speed
         }
         if (keys.right){
-            this.state.x += this.state.speed
+            xt += this.state.speed
         }
-        this.update()
+        this.setState({input : keys, x : xt, y : yt}) 
     }
     componentDidMount() {
         this.bindKeys(); 
+        this.update()
+    }
+    componentDidUpdate() {
         this.update()
     }
     componentWillUnmount() {
