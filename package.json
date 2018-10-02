@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "cookie": "^0.3.1",
+    "create-react-class": "^15.6.3",
     "escape-html": "^1.0.3",
     "express": "^4.16.3",
     "isomorphic-fetch": "==2.2.1",
@@ -32,10 +33,13 @@
     "react-autosuggest": "==9.3.4",
     "react-dom": "==16.0.0",
     "react-infinite-scroll-component": "==2.4.0",
+    "react-key-handler": "^1.2.0-beta.3",
     "socket.io": "^2.1.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "webpack": "webpack",
+    "webpack:w": "webpack -w"
   }
 }
