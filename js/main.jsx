@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types'
+import io from 'socket.io-client';
 
 var KEY = {
     LEFT:  37,
@@ -10,21 +11,38 @@ var KEY = {
 };
 
 
+
+
 class Game extends React.Component {
     constructor() {
         super();
         this.state = {
-            input: {
-                left: false, 
-                right: false, 
-                up: false, 
-                down: false
-            },
-            speed: 10,
-            x : 150,
-            y : 150
+            started: false,
+            players: [],
+            name: '',
+            endpoint: 'http://192.168.1.4'
         }
+        this.socket = null
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
     }
+    handleSubmit(event){
+        this.socket = io(this.state.endpoint);
+        this.socket.emit("new-player", this.state.name);
+         this.socket.on('update', (data)=>{
+            console.log(data);
+            this.setState({players : data});
+        });
+        this.setState({
+            started: true
+        })
+    }
+    handleChange(event){
+        this.setState({
+            name: event.target.value,
+        });
+    }
+
     bindKeys() {
         window.addEventListener('keyup',   this.handleKeys.bind(this, false));
         window.addEventListener('keydown', this.handleKeys.bind(this, true));
@@ -35,57 +53,67 @@ class Game extends React.Component {
         window.removeEventListener('keydown', this.handleKeys);
     }
     handleKeys(value, e){
-        let keys = this.state.input;
+        var msg
         switch (e.keyCode) {
-          case KEY.LEFT:
-             keys.left  = value;
-             break;
-          case KEY.RIGHT:
-             keys.right  = value;
-             break;
-          case KEY.UP:
-             keys.up  = value;
-             break;
-          case KEY.DOWN:
-             keys.down  = value;
-             break;
+            case KEY.LEFT:
+                msg = "L"
+                break;
+            case KEY.RIGHT:
+                msg = "R"
+                break;
+            case KEY.UP:
+                msg = "U"
+                break;
+            case KEY.DOWN:
+                msg = "D"
+                break;
+            default:
+                return
         }
-
-        let xt = this.state.x
-        let yt = this.state.y
-        if ( keys.up ){
-            yt -= this.state.speed
+        if(this.state.started){
+            console.log(msg)
+            this.socket.emit('movement',msg)
         }
-        if (keys.down){
-            yt += this.state.speed
-        }
-        if (keys.left){
-            xt -= this.state.speed
-        }
-        if (keys.right){
-            xt += this.state.speed
-        }
-        this.setState({input : keys, x : xt, y : yt}) 
     }
     componentDidMount() {
         this.bindKeys(); 
-        this.update()
+        this.drawPlayers();
     }
     componentDidUpdate() {
-        this.update()
+        this.drawPlayers()
     }
     componentWillUnmount() {
         this.unbindKeys();
     }
-    update() {
+    drawPlayers() {
         const ctx = this.refs.canvas.getContext('2d');
-        ctx.clearRect(0, 0, 300, 400);
-        ctx.fillRect(this.state.x, this.state.y,10, 10);
+        ctx.clearRect(0, 0, 1200, 800);
+        Object.keys(this.state.players).forEach((player) => {
+            ctx.fillRect(this.state.players[player].x, this.state.players[player].y, 10, 10);
+        });
     }
     render() {
         return (
             <div>
-                <canvas ref="canvas" width={300} height={400} style={{border:"1px solid #000000"}}> </canvas>
+                <canvas ref="canvas" width={800} height={600} style={{border:"1px solid #000000", float: "left"}}> </canvas>
+                <div ref="names" width={200}>
+                </div>
+                {!this.state.started &&
+                 <form onSubmit={this.handleSubmit}>
+                    <input
+                        type="text"
+                        onChange={this.handleChange}
+                     />
+                </form>
+                }
+                {
+                    this.state.started &&
+                    <p> {JSON.stringify(this.state.players)} </p>
+                }
+                <div style={{whiteSpace:"pre"}}>
+                    State: <br></br>
+                    {JSON.stringify(this.state, undefined, 4)}
+                </div>
             </div>
         );
     }
