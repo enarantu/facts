@@ -20,7 +20,7 @@ class Game extends React.Component {
             started: false,
             players: [],
             name: '',
-            endpoint: 'http://192.168.1.4'
+            endpoint: '10.0.0.65'
         }
         this.socket = null
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -69,8 +69,7 @@ class Game extends React.Component {
                 return
         }
         if(this.state.started){
-            console.log(msg)
-            this.socket.emit('movement',msg)
+            this.socket.emit('dir-change',msg)
         }
     }
     componentDidMount() {
@@ -86,8 +85,10 @@ class Game extends React.Component {
     drawPlayers() {
         const ctx = this.refs.canvas.getContext('2d');
         ctx.clearRect(0, 0, 1200, 800);
-        Object.keys(this.state.players).forEach((player) => {
-            ctx.fillRect(this.state.players[player].x, this.state.players[player].y, 10, 10);
+        Object.keys(this.state.players).forEach( player => {
+            this.state.players[player].forEach( block => 
+                ctx.fillRect(block.x, block.y, 10, 10)
+            )
         });
     }
     render() {
