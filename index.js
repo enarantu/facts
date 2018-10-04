@@ -40,6 +40,11 @@ io.on('connection', function(socket){
                 players[player_name].x -= 10
                 break
         }
+        players[player_name].x += 800
+        players[player_name].y += 600
+
+        players[player_name].x %= 800
+        players[player_name].y %= 600
         io.sockets.emit('update',players)
     })
     socket.on('disconnect', function(){

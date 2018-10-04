@@ -44,15 +44,13 @@ class Game extends React.Component {
     }
 
     bindKeys() {
-        window.addEventListener('keyup',   this.handleKeys.bind(this, false));
-        window.addEventListener('keydown', this.handleKeys.bind(this, true));
+        window.addEventListener('keydown', this.handleKeys.bind(this));
     }
 
     unbindKeys() {
-        window.removeEventListener('keyup', this.handleKeys);
         window.removeEventListener('keydown', this.handleKeys);
     }
-    handleKeys(value, e){
+    handleKeys(e){
         var msg
         switch (e.keyCode) {
             case KEY.LEFT:
