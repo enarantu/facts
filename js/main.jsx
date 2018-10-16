@@ -11,31 +11,93 @@ var KEY = {
 };
 
 
+function move(locations, direction){
+    function moveU(locations){
+        const n = locations.length
+        locations.push( 
+        { 
+            x : locations[n-1].x, 
+            y : locations[n-1].y - 10
+        })
+        locations.shift()
+    }
+    function moveD(locations){
+        const n = locations.length
+        locations.push( 
+        { 
+            x : locations[n-1].x, 
+            y : locations[n-1].y + 10
+        })
+        locations.shift()
 
+    }
+    function moveR(locations){
+        const n = locations.length
+        locations.push( 
+        { 
+            x : locations[n-1].x + 10, 
+            y : locations[n-1].y
+        })
+        locations.shift()
+
+    }
+    function moveL(locations){
+        const n = locations.length
+        locations.push( 
+        { 
+            x : locations[n-1].x - 10,
+            y : locations[n-1].y
+        })
+        locations.shift()
+    }
+    switch(direction){
+        case 'R':
+            moveR(locations)
+            break
+        case 'L':
+            moveL(locations)
+            break
+        case 'U':
+            moveU(locations)
+            break
+        case 'D':
+            moveD(locations)
+            break
+        default:
+            console.log("unhandled direction", direction)
+            break
+    }
+}
 
 class Game extends React.Component {
     constructor() {
         super();
         this.state = {
             started: false,
-            players: [],
             name: '',
-            endpoint: '10.0.0.65'
+            locations: {},
+            directions: {},
+            timesteps: {},
+            
+            endpoint: 'localhost'
         }
         this.socket = null
+        this.request_queue = []
+        this.timestep = -1
+
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
     }
     handleSubmit(event){
         this.socket = io(this.state.endpoint);
         this.socket.emit("new-player", this.state.name);
-         this.socket.on('update', (data)=>{
-            console.log(data);
-            this.setState({players : data});
-        });
-        this.setState({
-            started: true
+        this.socket.on("new-player", (data) => {
+            console.log('new-player', data)
+            clientstep = data.timestep + 1
         })
+        setInterval(() => {clientstep += 1} , 250)
+        this.state.started = true
+        this.setState({})
     }
     handleChange(event){
         this.setState({
@@ -51,25 +113,35 @@ class Game extends React.Component {
         window.removeEventListener('keydown', this.handleKeys);
     }
     handleKeys(e){
-        var msg
-        switch (e.keyCode) {
-            case KEY.LEFT:
-                msg = "L"
-                break;
-            case KEY.RIGHT:
-                msg = "R"
-                break;
-            case KEY.UP:
-                msg = "U"
-                break;
-            case KEY.DOWN:
-                msg = "D"
-                break;
-            default:
+        if( request_queue.length == 0 || request_queue[request_queue.length - 1].step < clientstep ){
+            var msg = {}
+            msg.request_type = 'dir-change'
+            msg.player_name = this.state.name
+            switch (e.keyCode) {
+                case KEY.LEFT:
+                    msg.dir = "L"
+                    break;
+                case KEY.RIGHT:
+                    msg.dir = "R"
+                    break;
+                case KEY.UP:
+                    msg.dir = "U"
+                    break;
+                case KEY.DOWN:
+                    msg.dir = "D"
+                    break;
+                default:
+                    return
+            }
+            if(msg.dir === dir){
                 return
-        }
-        if(this.state.started){
-            this.socket.emit('dir-change',msg)
+            }
+            dir = msg.dir
+            msg.step = clientstep
+            if(this.state.started){
+                this.socket.emit('request', msg)
+                request_queue.push(msg)
+            }
         }
     }
     componentDidMount() {
