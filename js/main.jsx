@@ -77,12 +77,14 @@ class Game extends React.Component {
         super()
         this.state = {
             started: false,
+            name : '',
             player_data: {},
             others_data: {},
             endpoint: 'localhost'
         }
         this.socket = null
         this.newdir = ''
+        this.dir = 'R'
 
         this.handleSubmit = this.handleSubmit.bind(this)
         this.handleChange = this.handleChange.bind(this)
@@ -115,7 +117,21 @@ class Game extends React.Component {
         EFFECTS: controls the game
         */
         this.socket.emit("new-player", this.state.name);
+        this.socket.on("new-player", (data) => {
+            this.state.player_data = data.player_data
+            this.state.others_data = data.others_data
+        })
+        this.socket.on("update", (data) => {
+            delete data[this.state.name]
+            this.state.others_data = data
+        })
         setInterval(() => {
+            if( this.newdir !== ''){
+                this.dir = this.newdir
+                this.newdir = ''
+            }
+            move(this.player_data, this.dir)
+            this.socket.emit("request", this.state.player_data)
             this.setState({})
         } , 250)
         
@@ -128,7 +144,7 @@ class Game extends React.Component {
         EFFECTS : setState is called, so rerenders
         */
         this.setState({
-            player_data : {name : event.target.value}
+            name : event.target.value
         });
     }
 
@@ -146,22 +162,22 @@ class Game extends React.Component {
         */
         switch (e.keyCode) {
             case KEY.LEFT:
-                if(this.player_data.dir !== "R"){
+                if(this.dir !== "R"){
                     this.newdir = "L"
                 }
                 break
             case KEY.RIGHT:
-                if(this.player_data.dir !== "L"){
+                if(this.dir !== "L"){
                     this.newdir = "R"
                 }
                 break
             case KEY.UP:
-                if(this.player_data.dir !== "D"){
+                if(this.dir !== "D"){
                     this.newdir = "U"
                 }
                 break;
             case KEY.DOWN:
-                if(this.player_data.dir !== "U"){
+                if(this.dir !== "U"){
                     this.newdir = "D"
                 }
                 break
