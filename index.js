@@ -33,13 +33,13 @@ io.on('connection', function(socket){
             }
         ]
         reply = {}
-        reply.player_daya = players[player_name]
+        reply.player_data = players[player_name]
         reply.others_data = Object.assign({}, players);
         delete reply.others_data.player_name;
         socket.emit('new-player', reply)
     });
 
-    socket.on('update', function(req){
+    socket.on('request', function(req){
         player_requests.push({name : player_name, data : req})
     })
 

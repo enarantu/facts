@@ -16,7 +16,7 @@ function move(locations, direction){
     MODIFIES: locations of the snake
     EFFECTS: moves the snake
     */
-    function moveU(locations){
+    function moveU(){
         const n = locations.length
         locations.push( 
         { 
@@ -25,7 +25,7 @@ function move(locations, direction){
         })
         locations.shift()
     }
-    function moveD(locations){
+    function moveD(){
         const n = locations.length
         locations.push( 
         { 
@@ -34,7 +34,7 @@ function move(locations, direction){
         })
         locations.shift()
     }
-    function moveR(locations){
+    function moveR(){
         const n = locations.length
         locations.push( 
         { 
@@ -44,7 +44,7 @@ function move(locations, direction){
         locations.shift()
 
     }
-    function moveL(locations){
+    function moveL(){
         const n = locations.length
         locations.push( 
         { 
@@ -55,16 +55,16 @@ function move(locations, direction){
     }
     switch(direction){
         case 'R':
-            moveR(locations)
+            moveR()
             break
         case 'L':
-            moveL(locations)
+            moveL()
             break
         case 'U':
-            moveU(locations)
+            moveU()
             break
         case 'D':
-            moveD(locations)
+            moveD()
             break
         default:
             console.log("unhandled direction", direction)
@@ -78,9 +78,9 @@ class Game extends React.Component {
         this.state = {
             started: false,
             name : '',
-            player_data: {},
+            player_data: [],
             others_data: {},
-            endpoint: 'localhost'
+            endpoint: '10.0.0.65'
         }
         this.socket = null
         this.newdir = ''
@@ -108,7 +108,8 @@ class Game extends React.Component {
         */
         this.socket = io(this.state.endpoint);
         this.state.started = true
-        game()
+        this.setState({})
+        this.game()
     }
     game(){
         /*
@@ -118,23 +119,27 @@ class Game extends React.Component {
         */
         this.socket.emit("new-player", this.state.name);
         this.socket.on("new-player", (data) => {
+            console.log("new-player", data)
+            console.log("server player_data", data.player_data)
             this.state.player_data = data.player_data
             this.state.others_data = data.others_data
+            console.log("player data :",this.state.player_data)
+            setInterval(() => {
+                if( this.newdir !== ''){
+                    this.dir = this.newdir
+                    this.newdir = ''
+                }
+                move(this.state.player_data, this.dir)
+                this.socket.emit("request", this.state.player_data)
+                this.setState({})
+                } , 250
+            ) 
         })
         this.socket.on("update", (data) => {
+            console.log("update", data)
             delete data[this.state.name]
             this.state.others_data = data
         })
-        setInterval(() => {
-            if( this.newdir !== ''){
-                this.dir = this.newdir
-                this.newdir = ''
-            }
-            move(this.player_data, this.dir)
-            this.socket.emit("request", this.state.player_data)
-            this.setState({})
-        } , 250)
-        
     }
 
     handleChange(event){
@@ -191,13 +196,16 @@ class Game extends React.Component {
         MODIFIES: canvas
         EFFECTS : draws snakes on canvas
         */
-        const ctx = this.refs.canvas.getContext('2d');
+        const ctx = this.refs.canvas.getContext('2d')
         ctx.clearRect(0, 0, 1200, 800);
-        Object.keys(this.state.players).forEach( player => {
-            this.state.players[player].forEach( block => 
+        Object.keys(this.state.others_data).forEach( player => {
+            this.state.others_data[player].forEach( block => 
                 ctx.fillRect(block.x, block.y, 10, 10)
             )
-        });
+        })
+        this.state.player_data.forEach( block => 
+            ctx.fillRect(block.x,block.y, 10, 10)
+        )
     }
     render() {
         return (
