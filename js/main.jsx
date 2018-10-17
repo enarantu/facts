@@ -70,6 +70,10 @@ function move(locations, direction){
             console.log("unhandled direction", direction)
             break
     }
+    locations[locations.length - 1].x += 800
+    locations[locations.length - 1].x %= 800
+    locations[locations.length - 1].y += 600
+    locations[locations.length - 1].y %= 600
 }
 
 class Game extends React.Component {
@@ -197,7 +201,22 @@ class Game extends React.Component {
         EFFECTS : draws snakes on canvas
         */
         const ctx = this.refs.canvas.getContext('2d')
-        ctx.clearRect(0, 0, 1200, 800);
+        ctx.clearRect(0, 0, 800, 600);
+        var pattern = document.createElement('canvas');
+        pattern.width = 20;
+        pattern.height = 20;
+        var pctx = pattern.getContext('2d');
+
+        // Two green rects make a checkered square: two green, two transparent (white)
+        pctx.fillStyle = "rgb(188, 222, 178)";
+        pctx.fillRect(0,0,10,10);
+        pctx.fillRect(10,10,10,10);
+
+        var pattern = ctx.createPattern(pattern, "repeat");
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0,0,800,600)
+
+        ctx.fillStyle = "#FF0000"
         Object.keys(this.state.others_data).forEach( player => {
             this.state.others_data[player].forEach( block => 
                 ctx.fillRect(block.x, block.y, 10, 10)
