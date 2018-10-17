@@ -12,6 +12,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var players = {}
+var food = []
 var player_requests = []
 
 io.on('connection', function(socket){
@@ -54,11 +55,23 @@ function serve_request(req){
     players[req.name] = req.data
 }
 
+function generate_food(arr){
+    let xc = parseInt(Math.floor((Math.random() * 80)))*10
+    let yc = parseInt(Math.floor((Math.random() * 60)))*10
+    arr.push({x : xc, y : yc})
+}
+
 setInterval(function(){
     while(player_requests.length > 0){
         serve_request(player_requests.shift())
     }
-    io.sockets.emit('update', players); 
+
+    while(food.length < 10){
+        generate_food(food)
+    }
+
+
+    io.sockets.emit('update', players, food);
 }, 250);
 
 http.listen(8080, 'localhost')

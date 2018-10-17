@@ -84,6 +84,7 @@ class Game extends React.Component {
             name : '',
             player_data: [],
             others_data: {},
+            food_data: [],
             endpoint: '10.0.0.65'
         }
         this.socket = null
@@ -96,10 +97,10 @@ class Game extends React.Component {
     }
     componentDidMount() {
         this.bindKeys()
-        this.drawPlayers()
+        this.draw()
     }
     componentDidUpdate() {
-        this.drawPlayers()
+        this.draw()
     }
     componentWillUnmount() {
         this.unbindKeys()
@@ -127,6 +128,7 @@ class Game extends React.Component {
             console.log("server player_data", data.player_data)
             this.state.player_data = data.player_data
             this.state.others_data = data.others_data
+            delete this.state.others_data[this.state.name]
             console.log("player data :",this.state.player_data)
             setInterval(() => {
                 if( this.newdir !== ''){
@@ -139,10 +141,10 @@ class Game extends React.Component {
                 } , 250
             ) 
         })
-        this.socket.on("update", (data) => {
-            console.log("update", data)
-            delete data[this.state.name]
-            this.state.others_data = data
+        this.socket.on("update", (data1, data2) => {
+            delete data1[this.state.name]
+            this.state.others_data = data1
+            this.state.food_data = data2
         })
     }
 
@@ -194,11 +196,11 @@ class Game extends React.Component {
                 return
         }
     }
-    drawPlayers() {
+    draw() {
         /*
         REQUIRES: component needs to be mounted
         MODIFIES: canvas
-        EFFECTS : draws snakes on canvas
+        EFFECTS : draws checkers, snakes, and food
         */
         const ctx = this.refs.canvas.getContext('2d')
         ctx.clearRect(0, 0, 800, 600);
@@ -224,6 +226,10 @@ class Game extends React.Component {
         })
         this.state.player_data.forEach( block => 
             ctx.fillRect(block.x,block.y, 10, 10)
+        )
+        ctx.fillStyle = "#7D3C98"
+        this.state.food_data.forEach( block => 
+            ctx.fillRect(block.x, block.y, 10, 10)
         )
     }
     render() {
