@@ -16,13 +16,14 @@ class Game extends React.Component {
         super()
         this.state = {
             started: false,
+            ended: false,
             name : '',
             player_data: [],
             others_data: {},
             food_data: [],
             endpoint: '10.0.0.65'
         }
-        this.socket = null
+        this.socket = io(this.state.endpoint);
         this.newdir = ''
         this.dir = 'R'
 
@@ -47,7 +48,6 @@ class Game extends React.Component {
         MODIFIES: this.state.started
         EFFECTS:  declares the game to started and starts game
         */
-        this.socket = io(this.state.endpoint);
         this.state.started = true
         this.setState({})
         this.game()
@@ -136,15 +136,14 @@ class Game extends React.Component {
         }
 
         if( collision === true){
-            this.state.started = false
+            this.state.ended = true
             this.state.player_data = []
             this.socket.emit("request", {
                 type : "over",
                 name : this.state.name,
             })
         }
-
-        if(collision === false){
+        else{
             let grow = false
             food.forEach(food_pos => {
                 if( food_pos.x === head_x && food_pos.y === head_y){
@@ -182,13 +181,15 @@ class Game extends React.Component {
                     this.dir = this.newdir
                     this.newdir = ''
                 }
-                this.move(this.state.player_data, this.dir, this.state.food_data)
-                this.socket.emit("request", 
-                    {
-                        type: "update",
-                        name: this.state.name,
-                        data: this.state.player_data
-                    })
+                if( !this.state.ended){
+                    this.move(this.state.player_data, this.dir, this.state.food_data)
+                    this.socket.emit("request", 
+                        {
+                            type: "update",
+                            name: this.state.name,
+                            data: this.state.player_data
+                        })
+                }
                 this.setState({})
                 } , 250
             ) 
@@ -286,6 +287,18 @@ class Game extends React.Component {
         )
     }
     render() {
+        const allplayers = Object.keys(this.state.others_data).concat([this.state.name])
+        const list = allplayers.map( name => (
+                <div>
+                    {name + " "} 
+                    { name === this.state.name && 
+                        this.state.player_data.length
+                    }
+                    { name !== this.state.name &&
+                        this.state.others_data[name].length
+                    }
+                </div>
+            ))
         return (
             <div>
                 <canvas ref="canvas" width={800} height={600} 
@@ -300,7 +313,7 @@ class Game extends React.Component {
                 }
                 {
                     this.state.started &&
-                    <p> {JSON.stringify(this.state.players)} </p>
+                    <p> {list} </p>
                 }
             </div>
         );
