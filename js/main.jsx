@@ -10,71 +10,6 @@ var KEY = {
     DOWN: 40
 }
 
-function move(locations, direction){
-    /*
-    REQUIRES: direction should be a valid direction, snake should be a valid snake
-    MODIFIES: locations of the snake
-    EFFECTS: moves the snake
-    */
-    function moveU(){
-        const n = locations.length
-        locations.push( 
-        { 
-            x : locations[n-1].x, 
-            y : locations[n-1].y - 10
-        })
-        locations.shift()
-    }
-    function moveD(){
-        const n = locations.length
-        locations.push( 
-        { 
-            x : locations[n-1].x, 
-            y : locations[n-1].y + 10
-        })
-        locations.shift()
-    }
-    function moveR(){
-        const n = locations.length
-        locations.push( 
-        { 
-            x : locations[n-1].x + 10, 
-            y : locations[n-1].y
-        })
-        locations.shift()
-
-    }
-    function moveL(){
-        const n = locations.length
-        locations.push( 
-        { 
-            x : locations[n-1].x - 10,
-            y : locations[n-1].y
-        })
-        locations.shift()
-    }
-    switch(direction){
-        case 'R':
-            moveR()
-            break
-        case 'L':
-            moveL()
-            break
-        case 'U':
-            moveU()
-            break
-        case 'D':
-            moveD()
-            break
-        default:
-            console.log("unhandled direction", direction)
-            break
-    }
-    locations[locations.length - 1].x += 800
-    locations[locations.length - 1].x %= 800
-    locations[locations.length - 1].y += 600
-    locations[locations.length - 1].y %= 600
-}
 
 class Game extends React.Component {
     constructor() {
@@ -94,6 +29,7 @@ class Game extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this)
         this.handleChange = this.handleChange.bind(this)
         this.handleKeys   = this.handleKeys.bind(this)
+        this.move = this.move.bind(this)
     }
     componentDidMount() {
         this.bindKeys()
@@ -116,6 +52,88 @@ class Game extends React.Component {
         this.setState({})
         this.game()
     }
+    move(locations, direction, food){
+    /*
+    REQUIRES: valid snake and direction
+    MODIFIES: locations of the snake
+    EFFECTS: moves the snake
+    */
+        function moveU(){
+            const n = locations.length
+            locations.push( 
+            { 
+                x : locations[n-1].x, 
+                y : locations[n-1].y - 10
+            })
+        }
+        function moveD(){
+            const n = locations.length
+            locations.push( 
+            { 
+                x : locations[n-1].x, 
+                y : locations[n-1].y + 10
+            })
+        }
+        function moveR(){
+            const n = locations.length
+            locations.push( 
+            { 
+                x : locations[n-1].x + 10, 
+                y : locations[n-1].y
+            })
+        }
+        function moveL(){
+            const n = locations.length
+            locations.push( 
+            { 
+                x : locations[n-1].x - 10,
+                y : locations[n-1].y
+            })
+        }
+        function wrap(){
+            locations[locations.length - 1].x += 800
+            locations[locations.length - 1].x %= 800
+            locations[locations.length - 1].y += 600
+            locations[locations.length - 1].y %= 600
+        }
+        switch(direction){
+            case 'R':
+                moveR()
+                break
+            case 'L':
+                moveL()
+                break
+            case 'U':
+                moveU()
+                break
+            case 'D':
+                moveD()
+                break
+            default:
+                console.log("unhandled direction", direction)
+                break
+        }
+        wrap()
+        let head_x = locations[locations.length - 1].x
+        let head_y = locations[locations.length - 1].y
+        let grow = false
+        food.forEach(food_pos => {
+            if( food_pos.x === head_x && food_pos.y === head_y){
+                console.log("whoopsie I am sending")
+                this.socket.emit("request", {
+                    type : "consume",
+                    name : this.state.name,
+                    data : food_pos}
+                )
+                grow = true
+            }
+        })
+        if( grow === false){
+            locations.shift()
+        }
+        
+    }
+
     game(){
         /*
         REQUIRES: this.state.started to be true
@@ -135,8 +153,13 @@ class Game extends React.Component {
                     this.dir = this.newdir
                     this.newdir = ''
                 }
-                move(this.state.player_data, this.dir)
-                this.socket.emit("request", this.state.player_data)
+                this.move(this.state.player_data, this.dir, this.state.food_data)
+                this.socket.emit("request", 
+                    {
+                        type: "update",
+                        name: this.state.name,
+                        data: this.state.player_data
+                    })
                 this.setState({})
                 } , 250
             ) 
@@ -209,7 +232,6 @@ class Game extends React.Component {
         pattern.height = 20;
         var pctx = pattern.getContext('2d');
 
-        // Two green rects make a checkered square: two green, two transparent (white)
         pctx.fillStyle = "rgb(188, 222, 178)";
         pctx.fillRect(0,0,10,10);
         pctx.fillRect(10,10,10,10);
@@ -236,7 +258,8 @@ class Game extends React.Component {
         return (
             <div>
                 <canvas ref="canvas" width={800} height={600} 
-                        style={{border:"1px solid #000000", float: "left"}}> </canvas>
+                    style={{border:"1px solid #000000", float: "left"}}> 
+                </canvas>
                 <div ref="names" width={200}></div>
                 {
                     !this.state.started &&
@@ -248,12 +271,6 @@ class Game extends React.Component {
                     this.state.started &&
                     <p> {JSON.stringify(this.state.players)} </p>
                 }
-                <div style={{whiteSpace:"pre"}}>
-                    State: <br></br>
-                    {
-                        JSON.stringify(this.state, undefined, 2)
-                    }
-                </div>
             </div>
         );
     }

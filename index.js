@@ -41,7 +41,7 @@ io.on('connection', function(socket){
     });
 
     socket.on('request', function(req){
-        player_requests.push({name : player_name, data : req})
+        player_requests.push(req)
     })
 
     socket.on('disconnect', function(){
@@ -52,6 +52,20 @@ io.on('connection', function(socket){
 
 
 function serve_request(req){
+    switch(req.type){
+        case "update":
+            players[req.name] = req.data
+            break
+        case "consume":
+            for( let i = food.length - 1; i >= 0; i--){
+                if( food[i].x === req.data.x && food[i].y === req.data.y){
+                    food.splice(i, 1)
+                }
+            }
+            break
+        default:
+            break
+    }
     players[req.name] = req.data
 }
 
@@ -69,7 +83,6 @@ setInterval(function(){
     while(food.length < 10){
         generate_food(food)
     }
-
 
     io.sockets.emit('update', players, food);
 }, 250);
