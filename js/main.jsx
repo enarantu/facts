@@ -116,22 +116,51 @@ class Game extends React.Component {
         wrap()
         let head_x = locations[locations.length - 1].x
         let head_y = locations[locations.length - 1].y
-        let grow = false
-        food.forEach(food_pos => {
-            if( food_pos.x === head_x && food_pos.y === head_y){
-                console.log("whoopsie I am sending")
-                this.socket.emit("request", {
-                    type : "consume",
-                    name : this.state.name,
-                    data : food_pos}
-                )
-                grow = true
-            }
+
+        let collision = false
+        Object.keys(this.state.others_data).forEach(player => {
+            this.state.others_data[player].forEach(block => {
+                if( block.x === head_x && block.y === head_y){
+                    collision = true
+                }
+            })
         })
-        if( grow === false){
-            locations.shift()
+
+        if( collision === false){
+            for(let i =  this.state.player_data.length - 2; i>=0; i--){
+                let block = this.state.player_data[i]
+                if(block.x === head_x && block.y === head_y){
+                    collision = true
+                }
+            }
         }
-        
+
+        if( collision === true){
+            this.state.started = false
+            this.state.player_data = []
+            this.socket.emit("request", {
+                type : "over",
+                name : this.state.name,
+            })
+        }
+
+        if(collision === false){
+            let grow = false
+            food.forEach(food_pos => {
+                if( food_pos.x === head_x && food_pos.y === head_y){
+                    console.log("whoopsie I am sending")
+                    this.socket.emit("request", {
+                        type : "consume",
+                        name : this.state.name,
+                        data : food_pos}
+                    )
+                    grow = true
+                }
+            })
+            if( grow === false){
+                locations.shift()
+            }
+        }
     }
 
     game(){
@@ -194,29 +223,31 @@ class Game extends React.Component {
         MODIFIES: new direction variable this.newdir
         EFFECTS:  prepares this.newdir for the next frame
         */
-        switch (e.keyCode) {
-            case KEY.LEFT:
-                if(this.dir !== "R"){
-                    this.newdir = "L"
-                }
-                break
-            case KEY.RIGHT:
-                if(this.dir !== "L"){
-                    this.newdir = "R"
-                }
-                break
-            case KEY.UP:
-                if(this.dir !== "D"){
-                    this.newdir = "U"
-                }
-                break;
-            case KEY.DOWN:
-                if(this.dir !== "U"){
-                    this.newdir = "D"
-                }
-                break
-            default:
-                return
+        if( this.state.started){
+            switch (e.keyCode) {
+                case KEY.LEFT:
+                    if(this.dir !== "R"){
+                        this.newdir = "L"
+                    }
+                    break
+                case KEY.RIGHT:
+                    if(this.dir !== "L"){
+                        this.newdir = "R"
+                    }
+                    break
+                case KEY.UP:
+                    if(this.dir !== "D"){
+                        this.newdir = "U"
+                    }
+                    break;
+                case KEY.DOWN:
+                    if(this.dir !== "U"){
+                        this.newdir = "D"
+                    }
+                    break
+                default:
+                    return
+            }
         }
     }
     draw() {
@@ -240,6 +271,10 @@ class Game extends React.Component {
         ctx.fillStyle = pattern;
         ctx.fillRect(0,0,800,600)
 
+        ctx.fillStyle = "#7D3C98"
+        this.state.food_data.forEach( block => 
+            ctx.fillRect(block.x, block.y, 10, 10)
+        )
         ctx.fillStyle = "#FF0000"
         Object.keys(this.state.others_data).forEach( player => {
             this.state.others_data[player].forEach( block => 
@@ -248,10 +283,6 @@ class Game extends React.Component {
         })
         this.state.player_data.forEach( block => 
             ctx.fillRect(block.x,block.y, 10, 10)
-        )
-        ctx.fillStyle = "#7D3C98"
-        this.state.food_data.forEach( block => 
-            ctx.fillRect(block.x, block.y, 10, 10)
         )
     }
     render() {

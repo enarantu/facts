@@ -63,6 +63,8 @@ function serve_request(req){
                 }
             }
             break
+        case "over":
+            delete players[req.name]
         default:
             break
     }
