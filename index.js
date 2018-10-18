@@ -64,6 +64,9 @@ function serve_request(req){
             }
             break
         case "over":
+            players[req.name].forEach( block => {
+                food.push(block)
+            })
             delete players[req.name]
         default:
             break
@@ -72,7 +75,7 @@ function serve_request(req){
 }
 
 function generate_food(arr){
-    let xc = parseInt(Math.floor((Math.random() * 80)))*10
+    let xc = parseInt(Math.floor((Math.random() * 60)))*10
     let yc = parseInt(Math.floor((Math.random() * 60)))*10
     arr.push({x : xc, y : yc})
 }

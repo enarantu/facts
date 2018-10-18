@@ -90,12 +90,6 @@ class Game extends React.Component {
                 y : locations[n-1].y
             })
         }
-        function wrap(){
-            locations[locations.length - 1].x += 800
-            locations[locations.length - 1].x %= 800
-            locations[locations.length - 1].y += 600
-            locations[locations.length - 1].y %= 600
-        }
         switch(direction){
             case 'R':
                 moveR()
@@ -113,18 +107,20 @@ class Game extends React.Component {
                 console.log("unhandled direction", direction)
                 break
         }
-        wrap()
         let head_x = locations[locations.length - 1].x
         let head_y = locations[locations.length - 1].y
 
-        let collision = false
-        Object.keys(this.state.others_data).forEach(player => {
-            this.state.others_data[player].forEach(block => {
-                if( block.x === head_x && block.y === head_y){
-                    collision = true
-                }
+        let collision = (head_x < 0 || head_y < 0 || head_x >= 600 || head_y >= 600)
+
+        if( collision === false){
+            Object.keys(this.state.others_data).forEach(player => {
+                this.state.others_data[player].forEach(block => {
+                    if( block.x === head_x && block.y === head_y){
+                        collision = true
+                    }
+                })
             })
-        })
+        }
 
         if( collision === false){
             for(let i =  this.state.player_data.length - 2; i>=0; i--){
@@ -258,38 +254,48 @@ class Game extends React.Component {
         EFFECTS : draws checkers, snakes, and food
         */
         const ctx = this.refs.canvas.getContext('2d')
-        ctx.clearRect(0, 0, 800, 600);
+        ctx.clearRect(0, 0, 600, 600);
         var pattern = document.createElement('canvas');
         pattern.width = 20;
         pattern.height = 20;
         var pctx = pattern.getContext('2d');
 
-        pctx.fillStyle = "rgb(188, 222, 178)";
-        pctx.fillRect(0,0,10,10);
-        pctx.fillRect(10,10,10,10);
+        pctx.fillStyle = "rgb(193,245,77)"
+        pctx.fillRect(0,0,10,10)
+        pctx.fillRect(10,10,10,10)
+        pctx.fillStyle = "rgb(203,245,97)"
+        pctx.fillRect(0,10,10,10)
+        pctx.fillRect(10,0,10,10)
 
         var pattern = ctx.createPattern(pattern, "repeat");
         ctx.fillStyle = pattern;
-        ctx.fillRect(0,0,800,600)
+        ctx.fillRect(0,0,600,600)
 
-        ctx.fillStyle = "#7D3C98"
+        ctx.fillStyle = "rgb(255,0,0)"
         this.state.food_data.forEach( block => 
             ctx.fillRect(block.x, block.y, 10, 10)
         )
-        ctx.fillStyle = "#FF0000"
+        ctx.fillStyle = "rgb(50,205,50)"
         Object.keys(this.state.others_data).forEach( player => {
             this.state.others_data[player].forEach( block => 
-                ctx.fillRect(block.x, block.y, 10, 10)
+                ctx.fillRect(block.x + 1, block.y + 1, 8, 8)
             )
+            let head = this.state.others_data[player][this.state.others_data[player].length - 1]
+            ctx.fillRect(head.x , head.y , 10,10 )
         })
+        ctx.fillStyle = "rgb(30,144,255)"
         this.state.player_data.forEach( block => 
-            ctx.fillRect(block.x,block.y, 10, 10)
+            ctx.fillRect(block.x + 1,block.y + 1, 8, 8)
         )
+        if( this.state.player_data.length > 0){
+            let head = this.state.player_data[this.state.player_data.length - 1]
+            ctx.fillRect(head.x , head.y , 10,10 )
+        }
     }
     render() {
         const allplayers = Object.keys(this.state.others_data).concat([this.state.name])
         const list = allplayers.map( name => (
-                <div>
+                <div key="name">
                     {name + " "} 
                     { name === this.state.name && 
                         this.state.player_data.length
@@ -301,8 +307,8 @@ class Game extends React.Component {
             ))
         return (
             <div>
-                <canvas ref="canvas" width={800} height={600} 
-                    style={{border:"1px solid #000000", float: "left"}}> 
+                <canvas ref="canvas" width={600} height={600} 
+                    style={{border:"5px solid rgb(50,205,50)", float: "left"}}> 
                 </canvas>
                 <div ref="names" width={200}></div>
                 {
