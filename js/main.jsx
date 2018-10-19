@@ -25,7 +25,7 @@ class Game extends React.Component {
                 double : null
             },
             player_power: {
-                double: 1
+                double: 0
             },
             endpoint: '10.0.0.65'
         }
@@ -186,12 +186,12 @@ class Game extends React.Component {
             this.state.others_data = data.others_data
             delete this.state.others_data[this.state.name]
             setInterval(() => {
-                if( this.newdir !== ''){
-                    this.dir = this.newdir
-                    this.newdir = ''
-                }
                 if( !this.state.ended){
                     if(this.even || this.state.player_power.double > 0){
+                        if( this.newdir !== ''){
+                            this.dir = this.newdir
+                            this.newdir = ''
+                        }
                         this.move(this.state.player_data, this.dir, this.state.food_data)
                         this.state.player_power.double -= 1
                     }
