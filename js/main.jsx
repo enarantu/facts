@@ -162,7 +162,7 @@ class Game extends React.Component {
             if( grow === false){
                 if( this.state.power_data.double.x === head_x && 
                     this.state.power_data.double.y === head_y ){
-                    this.state.player_power.double += 200
+                    this.state.player_power.double = 100
                     this.socket.emit("request",{
                         type: "power",
                         power_type: "double",
@@ -326,16 +326,27 @@ class Game extends React.Component {
 
     }
     render() {
-        const allplayers = Object.keys(this.state.others_data).concat([this.state.name])
-        const list = allplayers.map( name => (
-                <p key={name}>
-                    {name + " "} 
-                    { name === this.state.name && 
-                        this.state.player_data.length
-                    }
-                    { name !== this.state.name &&
-                        this.state.others_data[name].length
-                    }
+        const all_player_names = Object.keys(this.state.others_data).concat([this.state.name])
+        const all_player_names_scores = all_player_names.map((name)=>{
+            if(name === this.state.name){
+                return {
+                    name: name,
+                    score: this.state.player_data.length
+                }
+            }
+            else{
+                return {
+                    name: name,
+                    score: this.state.others_data[name].length
+                }
+            }
+        }).sort(function(a,b){
+            return b.score - a.score
+        })
+
+        const list = all_player_names_scores.map( elem => (
+                <p key={elem.name}>
+                    {elem.name} {elem.score}
                 </p>
             ))
         return (
