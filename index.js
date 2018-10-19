@@ -13,6 +13,9 @@ var io = require('socket.io')(http);
 
 var players = {}
 var food = []
+var power = {
+    double : null
+}
 var player_requests = []
 
 io.on('connection', function(socket){
@@ -21,16 +24,16 @@ io.on('connection', function(socket){
         player_name = name
         players[name] = [
             {
-                x :  150,
-                y :  150
+                x :  140,
+                y :  140
             },
             {
                 x : 160,
-                y : 150
+                y : 140
             },
             {
-                x : 170,
-                y : 150
+                x : 180,
+                y : 140
             }
         ]
         reply = {}
@@ -68,6 +71,14 @@ function serve_request(req){
                 food.push(block)
             })
             delete players[req.name]
+        case "power":
+            switch(req.power_type){
+                case "double":
+                    power.double = null
+                    break
+                default:
+                    break
+            }
         default:
             break
     }
@@ -75,9 +86,15 @@ function serve_request(req){
 }
 
 function generate_food(arr){
-    let xc = parseInt(Math.floor((Math.random() * 60)))*10
-    let yc = parseInt(Math.floor((Math.random() * 60)))*10
+    let xc = parseInt(Math.floor((Math.random() * 30)))*20
+    let yc = parseInt(Math.floor((Math.random() * 30)))*20
     arr.push({x : xc, y : yc})
+}
+
+function generate(){
+    let xc = parseInt(Math.floor((Math.random() * 30)))*20
+    let yc = parseInt(Math.floor((Math.random() * 30)))*20
+    return {x : xc, y : yc}
 }
 
 setInterval(function(){
@@ -85,11 +102,16 @@ setInterval(function(){
         serve_request(player_requests.shift())
     }
 
-    while(food.length < 10){
+    while(food.length < 8){
         generate_food(food)
     }
 
-    io.sockets.emit('update', players, food);
-}, 250);
+    if(power.double === null){
+        power.double = generate()
+        console.log(power)
+    }
+
+    io.sockets.emit('update', players, food, power);
+}, 100);
 
 http.listen(8080, 'localhost')

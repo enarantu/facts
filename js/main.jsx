@@ -21,11 +21,18 @@ class Game extends React.Component {
             player_data: [],
             others_data: {},
             food_data: [],
+            power_data : {
+                double : null
+            },
+            player_power: {
+                double: 1
+            },
             endpoint: '10.0.0.65'
         }
         this.socket = io(this.state.endpoint);
         this.newdir = ''
         this.dir = 'R'
+        this.even = true
 
         this.handleSubmit = this.handleSubmit.bind(this)
         this.handleChange = this.handleChange.bind(this)
@@ -63,7 +70,7 @@ class Game extends React.Component {
             locations.push( 
             { 
                 x : locations[n-1].x, 
-                y : locations[n-1].y - 10
+                y : locations[n-1].y - 20
             })
         }
         function moveD(){
@@ -71,14 +78,14 @@ class Game extends React.Component {
             locations.push( 
             { 
                 x : locations[n-1].x, 
-                y : locations[n-1].y + 10
+                y : locations[n-1].y + 20
             })
         }
         function moveR(){
             const n = locations.length
             locations.push( 
             { 
-                x : locations[n-1].x + 10, 
+                x : locations[n-1].x + 20, 
                 y : locations[n-1].y
             })
         }
@@ -86,7 +93,7 @@ class Game extends React.Component {
             const n = locations.length
             locations.push( 
             { 
-                x : locations[n-1].x - 10,
+                x : locations[n-1].x - 20,
                 y : locations[n-1].y
             })
         }
@@ -153,6 +160,15 @@ class Game extends React.Component {
                 }
             })
             if( grow === false){
+                if( this.state.power_data.double.x === head_x && 
+                    this.state.power_data.double.y === head_y ){
+                    this.state.player_power.double += 200
+                    this.socket.emit("request",{
+                        type: "power",
+                        power_type: "double",
+                        name : this.state.name,
+                    })
+                }
                 locations.shift()
             }
         }
@@ -166,19 +182,19 @@ class Game extends React.Component {
         */
         this.socket.emit("new-player", this.state.name);
         this.socket.on("new-player", (data) => {
-            console.log("new-player", data)
-            console.log("server player_data", data.player_data)
             this.state.player_data = data.player_data
             this.state.others_data = data.others_data
             delete this.state.others_data[this.state.name]
-            console.log("player data :",this.state.player_data)
             setInterval(() => {
                 if( this.newdir !== ''){
                     this.dir = this.newdir
                     this.newdir = ''
                 }
                 if( !this.state.ended){
-                    this.move(this.state.player_data, this.dir, this.state.food_data)
+                    if(this.even || this.state.player_power.double > 0){
+                        this.move(this.state.player_data, this.dir, this.state.food_data)
+                        this.state.player_power.double -= 1
+                    }
                     this.socket.emit("request", 
                         {
                             type: "update",
@@ -186,14 +202,17 @@ class Game extends React.Component {
                             data: this.state.player_data
                         })
                 }
+            console.log(this.state.others_data)
                 this.setState({})
-                } , 250
+                this.even = !this.even
+                } , 100
             ) 
         })
-        this.socket.on("update", (data1, data2) => {
+        this.socket.on("update", (data1, data2, data3) => {
             delete data1[this.state.name]
             this.state.others_data = data1
             this.state.food_data = data2
+            this.state.power_data = data3
         })
     }
 
@@ -256,46 +275,60 @@ class Game extends React.Component {
         const ctx = this.refs.canvas.getContext('2d')
         ctx.clearRect(0, 0, 600, 600);
         var pattern = document.createElement('canvas');
-        pattern.width = 20;
-        pattern.height = 20;
+        pattern.width = 40;
+        pattern.height = 40;
         var pctx = pattern.getContext('2d');
 
         pctx.fillStyle = "rgb(193,245,77)"
-        pctx.fillRect(0,0,10,10)
-        pctx.fillRect(10,10,10,10)
+        pctx.fillRect(0,0,20,20)
+        pctx.fillRect(20,20,20,20)
         pctx.fillStyle = "rgb(203,245,97)"
-        pctx.fillRect(0,10,10,10)
-        pctx.fillRect(10,0,10,10)
+        pctx.fillRect(0,20,20,20)
+        pctx.fillRect(20,0,20,20)
 
         var pattern = ctx.createPattern(pattern, "repeat");
         ctx.fillStyle = pattern;
         ctx.fillRect(0,0,600,600)
 
         ctx.fillStyle = "rgb(255,0,0)"
-        this.state.food_data.forEach( block => 
-            ctx.fillRect(block.x, block.y, 10, 10)
-        )
+        this.state.food_data.forEach( block => {
+            ctx.beginPath()
+            ctx.arc(block.x + 10, block.y + 10, 6, 0, 2*Math.PI)
+            ctx.fill()
+        })
+
+        if(this.state.power_data.double !== null){
+            let coord = this.state.power_data.double
+            ctx.fillStyle = "rgb(255,215,0)"
+            ctx.beginPath()
+            ctx.arc(coord.x + 10, coord.y + 10, 6, 0, 2*Math.PI)
+            ctx.fill()
+        }
+
         ctx.fillStyle = "rgb(50,205,50)"
         Object.keys(this.state.others_data).forEach( player => {
             this.state.others_data[player].forEach( block => 
-                ctx.fillRect(block.x + 1, block.y + 1, 8, 8)
+                ctx.fillRect(block.x + 2, block.y + 2, 16, 16)
             )
-            let head = this.state.others_data[player][this.state.others_data[player].length - 1]
-            ctx.fillRect(head.x , head.y , 10,10 )
+            if(this.state.others_data[player].length > 0){
+                let head = this.state.others_data[player][this.state.others_data[player].length - 1]
+                ctx.fillRect(head.x , head.y , 20,20 )
+            }
         })
         ctx.fillStyle = "rgb(30,144,255)"
         this.state.player_data.forEach( block => 
-            ctx.fillRect(block.x + 1,block.y + 1, 8, 8)
+            ctx.fillRect(block.x + 2,block.y + 2, 16, 16)
         )
         if( this.state.player_data.length > 0){
             let head = this.state.player_data[this.state.player_data.length - 1]
-            ctx.fillRect(head.x , head.y , 10,10 )
+            ctx.fillRect(head.x , head.y , 20,20 )
         }
+
     }
     render() {
         const allplayers = Object.keys(this.state.others_data).concat([this.state.name])
         const list = allplayers.map( name => (
-                <div key="name">
+                <p key={name}>
                     {name + " "} 
                     { name === this.state.name && 
                         this.state.player_data.length
@@ -303,7 +336,7 @@ class Game extends React.Component {
                     { name !== this.state.name &&
                         this.state.others_data[name].length
                     }
-                </div>
+                </p>
             ))
         return (
             <div>
@@ -319,7 +352,7 @@ class Game extends React.Component {
                 }
                 {
                     this.state.started &&
-                    <p> {list} </p>
+                    <div> {list} </div>
                 }
             </div>
         );
