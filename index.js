@@ -108,7 +108,6 @@ setInterval(function(){
 
     if(power.double === null){
         power.double = generate()
-        console.log(power)
     }
 
     io.sockets.emit('update', players, food, power);
