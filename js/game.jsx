@@ -357,7 +357,7 @@ class Game extends React.Component {
                 <div ref="names" width={200}></div>
                 {
                     !this.state.started &&
-                     <form onSubmit={this.handleSubmit}>
+                    <form onSubmit={this.handleSubmit}>
                         <input type="text" onChange={this.handleChange}/>
                     </form>
                 }
