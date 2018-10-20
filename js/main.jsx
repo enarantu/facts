@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap'
+import Game from './game'
 
 class ModalExample extends React.Component {
   constructor(props) {
@@ -29,14 +30,11 @@ class ModalExample extends React.Component {
       <div className="h-100 w-100 d-flex justify-content-center align-items-center bg-primary">
           <input type="text" id="name" maxLength="5" size="5" style={{fontSize : 40}} onChange={this.handleChange}/>
           <Button color="danger" onClick={this.toggle} style={{fontSize : 40}}>PLAY</Button>
-        <Modal isOpen={this.state.modal} toggle={this.toggle}>
-          <ModalHeader toggle={this.toggle}>Modal title</ModalHeader>
+        <Modal size="lg" isOpen={this.state.modal} toggle={this.toggle}>
           <ModalBody>
-            {this.state.name}
+            {<Game name = {this.state.name} />}
           </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggle}>Cancel</Button>
-          </ModalFooter>
+          <Button color="secondary" onClick={this.toggle}>Cancel</Button>
         </Modal>
       </div>
     );

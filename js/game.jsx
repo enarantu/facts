@@ -12,12 +12,11 @@ var KEY = {
 
 
 class Game extends React.Component {
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
         this.state = {
-            started: false,
             ended: false,
-            name : '',
+            name : this.props.name,
             player_data: [],
             others_data: {},
             food_data: [],
@@ -29,15 +28,15 @@ class Game extends React.Component {
             },
             endpoint: '10.0.0.65'
         }
+        console.log("at least connected", this.state)
         this.socket = io(this.state.endpoint);
         this.newdir = ''
         this.dir = 'R'
         this.even = true
 
-        this.handleSubmit = this.handleSubmit.bind(this)
-        this.handleChange = this.handleChange.bind(this)
         this.handleKeys   = this.handleKeys.bind(this)
         this.move = this.move.bind(this)
+        this.game()
     }
     componentDidMount() {
         this.bindKeys()
@@ -48,16 +47,7 @@ class Game extends React.Component {
     }
     componentWillUnmount() {
         this.unbindKeys()
-    }
-    handleSubmit(event){
-        /*
-        REQUIRES: user to click submit
-        MODIFIES: this.state.started
-        EFFECTS:  declares the game to started and starts game
-        */
-        this.state.started = true
-        this.setState({})
-        this.game()
+        this.socket.disconnect()
     }
     move(locations, direction, food){
     /*
@@ -216,17 +206,6 @@ class Game extends React.Component {
         })
     }
 
-    handleChange(event){
-        /*
-        REQUIRES: keyboard to be bound
-        MODIFIES: player name
-        EFFECTS : setState is called, so rerenders
-        */
-        this.setState({
-            name : event.target.value
-        });
-    }
-
     bindKeys() {
         window.addEventListener('keydown', this.handleKeys);
     }
@@ -239,31 +218,29 @@ class Game extends React.Component {
         MODIFIES: new direction variable this.newdir
         EFFECTS:  prepares this.newdir for the next frame
         */
-        if( this.state.started){
-            switch (e.keyCode) {
-                case KEY.LEFT:
-                    if(this.dir !== "R"){
-                        this.newdir = "L"
-                    }
-                    break
-                case KEY.RIGHT:
-                    if(this.dir !== "L"){
-                        this.newdir = "R"
-                    }
-                    break
-                case KEY.UP:
-                    if(this.dir !== "D"){
-                        this.newdir = "U"
-                    }
-                    break;
-                case KEY.DOWN:
-                    if(this.dir !== "U"){
-                        this.newdir = "D"
-                    }
-                    break
-                default:
-                    return
-            }
+        switch (e.keyCode) {
+            case KEY.LEFT:
+                if(this.dir !== "R"){
+                    this.newdir = "L"
+                }
+                break
+            case KEY.RIGHT:
+                if(this.dir !== "L"){
+                    this.newdir = "R"
+                }
+                break
+            case KEY.UP:
+                if(this.dir !== "D"){
+                    this.newdir = "U"
+                }
+                break;
+            case KEY.DOWN:
+                if(this.dir !== "U"){
+                    this.newdir = "D"
+                }
+                break
+            default:
+                return
         }
     }
     draw() {
@@ -355,18 +332,10 @@ class Game extends React.Component {
                     style={{border:"5px solid rgb(50,205,50)", float: "left"}}> 
                 </canvas>
                 <div ref="names" width={200}></div>
-                {
-                    !this.state.started &&
-                    <form onSubmit={this.handleSubmit}>
-                        <input type="text" onChange={this.handleChange}/>
-                    </form>
-                }
-                {
-                    this.state.started &&
-                    <div> {list} </div>
-                }
+                <div> {list} </div>
             </div>
         );
     }
 }
-ReactDOM.render(<Game/>, document.getElementById('app'))
+
+export default Game
