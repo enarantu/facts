@@ -5,8 +5,9 @@ import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap'
 import Game from './game'
 
 class ModalExample extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    console.log("gets here")
+    super()
     this.state = {
       name: "",
       modal: false
@@ -40,4 +41,4 @@ class ModalExample extends React.Component {
     );
   }
 }
-ReactDOM.render(<ModalExample buttonLabel = "woof"/>, document.getElementById('app'))
+ReactDOM.render(<ModalExample/>, document.getElementById('app'))
