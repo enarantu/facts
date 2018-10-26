@@ -46,14 +46,16 @@ const logic = {
     },
 
     will_hit_food: function(foods,p_block){
+        let ans = {x : -1, y : -1}
         foods.forEach(food => {
             if(food.x === p_block.x && food.y === p_block.y){
-                return {x : food.x, y: food.y}
+                ans = p_block
             }
         })
-        return {x: -1, y: -1}
+        return ans
     },
     will_hit_double: function(double, p_block){
+        console.log(double, p_block)
         if(double.x === p_block.x && double.y === p_block.y){
             return true
         }

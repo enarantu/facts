@@ -19,6 +19,12 @@ class Field extends React.Component{
     componentDidUpdate(){
         this.draw()
     }
+    componentWillReceiveProps(nextProps) {
+        this.setState({ others_data : nextProps.others_data,
+                        player_data : nextProps.player_data,
+                        food_data   : nextProps.food_data,
+                        power_data  : nextProps.power_data});  
+    }
     render(){
         return (
             <canvas ref="canvas" width={600} height={600} 
@@ -27,10 +33,10 @@ class Field extends React.Component{
         )
     }
     draw_pattern(){
-        const pattern = document.createElement('checkered');
-        const pctx = pattern.getContext('2d');
+        const pattern = document.createElement('canvas');
         pattern.width = 40;
         pattern.height = 40;
+        const pctx = pattern.getContext('2d');
         pctx.fillStyle = "rgb(193,245,77)"
         pctx.fillRect(0,0,20,20)
         pctx.fillRect(20,20,20,20)
@@ -43,6 +49,7 @@ class Field extends React.Component{
         ctx.fillRect(0,0,600,600)
     }
     draw_food(){
+        const ctx = this.refs.canvas.getContext('2d')
         ctx.fillStyle = "rgb(255,0,0)"
         this.state.food_data.forEach( block => {
             ctx.beginPath()
@@ -51,6 +58,7 @@ class Field extends React.Component{
         })
     }
     draw_power(){
+        const ctx = this.refs.canvas.getContext('2d')
         if(this.state.power_data.hasOwnProperty("double")){
             let coord = this.state.power_data.double
             ctx.fillStyle = "rgb(255,215,0)"
@@ -60,6 +68,7 @@ class Field extends React.Component{
         }
     }
     draw_others(){
+        const ctx = this.refs.canvas.getContext('2d')
         ctx.fillStyle = "rgb(50,205,50)"
         Object.keys(this.state.others_data).forEach( player => {
             this.state.others_data[player].forEach( block => 
@@ -72,6 +81,7 @@ class Field extends React.Component{
         })
     }
     draw_self(){
+        const ctx = this.refs.canvas.getContext('2d')
         ctx.fillStyle = "rgb(30,144,255)"
         this.state.player_data.forEach( block => 
             ctx.fillRect(block.x + 2,block.y + 2, 16, 16)

@@ -19,66 +19,81 @@ class Game extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            ended: false,
+            id: -1,
             name : this.props.name,
             player_data: [],
             others_data: {},
             food_data: [],
             power_data: {},
-            player_power: {},
-            endpoint: '10.0.0.65'
+            player_power: {
+                double: 0
+            },
+            endpoint: 'localhost'
         }
+        this.ongoing = false
         this.socket = io(this.state.endpoint);
         this.socket.on("update", (data1, data2, data3) => {
             delete data1[this.state.name]
+            console.log('recieved update', data1, data2, data3)
             this.state.others_data = data1
             this.state.food_data = data2
             this.state.power_data = data3
+            if(!this.ongoing){
+                this.setState({})
+            }
         })
-        console.log("gets here")
+        this.socket.on("new-player", (data, id) => {
+            this.state.player_data = data
+            this.state.id = id
+            this.game_loop = setInterval(this.tick, 100)
+            this.ongoing = true
+        })
         this.newdir = ''
         this.dir = 'R'
         this.even = true
         this.game_loop = null
+        this.tick = this.tick.bind(this)
+        this.handleKeys   = this.handleKeys.bind(this)
+        this.tick_helper = this.tick_helper.bind(this)
+        this.collision = this.collision.bind(this)
+        this.consume = this.consume.bind(this)
+        this.update = this.update.bind(this)
+        this.newgame = this.newgame.bind(this)
     }
     componentDidMount() {
         this.bindKeys()
-        this.newGame()
+        this.newgame()
     }
     componentWillUnmount() {
         this.unbindKeys()
-        this.socket.disconnect()
         clearInterval(this.game_loop)
+        this.socket.disconnect()
+        this.ongoing = false
     }
     collision(){
         this.state.player_data = []
         this.socket.emit("request", {
             type : "over",
-            name : this.state.name,
+            id : this.state.id,
         })
         clearInterval(this.game_loop)
+        this.ongoing = false
     }
-    food_consume(food_pos){
+    consume(pos){
         this.socket.emit("request", {
             type : "consume",
-            name : this.state.name,
-            data : food_pos
+            block : pos
         })
     }
-    double_consume(){
-        this.state.player_power.double = 100
-        this.socket.emit("request",{
-            type: "power",
-            power_type: "double",
-            name : this.state.name,
-        })
-    }
-    send_update(){
+    update(){
         this.socket.emit("request", {
             type: "update",
-            name: this.state.name,
-            data: this.state.player_data
+            id: this.state.id,
+            blocks: this.state.player_data
         })
+    }
+    newgame(){
+        this.socket.emit("new-player", this.state.name)
     }
     tick_helper(){
     /*
@@ -92,14 +107,15 @@ class Game extends React.Component {
            logic.will_hit_others(this.state.others_data, head) ) {
             this.collision()
         }
-        else if(logic.will_hit_double(this.state.power_data, head)){
-            this.double_consume()
-            this.state.player_data.shift()
+        
+        this.state.player_data.push(head)
+        if(logic.will_hit_double(this.state.power_data.double, head)){
+            this.consume(head)
         }
         else{
             const block = logic.will_hit_food(this.state.food_data, head)
             if(block.x >= 0 && block.y >= 0){
-                this.food_consume(block)
+                this.consume(head)
             }
             else{
                 this.state.player_data.shift()
@@ -107,13 +123,6 @@ class Game extends React.Component {
         }
     }
 
-    newGame(){
-        this.socket.emit("new-player", this.state.name)
-        this.socket.on("new-player", (data) => {
-            this.state.player_data = data.player_data
-        })
-        this.game_loop = setInterval(this.tick, 100)
-    }
     tick(){
         /*
         REQUIRES: this.state.started to be true
@@ -130,7 +139,7 @@ class Game extends React.Component {
                 this.state.player_power.double -= 1
             }
         }
-        this.send_update()
+        this.update()
         this.setState({})
         this.even = !this.even
     }
@@ -170,16 +179,29 @@ class Game extends React.Component {
                 break
             default:
                 return
+            console.log("NEWDIR:", this.newdir)
         }
     }
     render() {
-
+        const tempObj = {}
+        tempObj[this.state.name] = this.state.player_data
+        const cdata = Object.assign(tempObj , this.state.others_data)
+        const sprops = Object.keys(cdata).map( name => {
+            return {
+                name : name,
+                score : cdata[name].length,
+                is_self : name === this.state.name
+            }
+        })
         return (
             <div>
                 {<Field others_data = {this.state.others_data}
                         player_data = {this.state.player_data}
                         food_data   = {this.state.food_data}
                         power_data  = {this.state.power_data}/>
+                }
+                {
+                    <Scoreboard data ={sprops}/>
                 }
             </div>
         )
