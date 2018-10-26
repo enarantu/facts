@@ -32,8 +32,8 @@ const logic = {
         return false
     },
     will_hit_others: function(others, p_block){
-        Object.keys(others).forEach(name => {
-            others[name].forEach(block => {
+        others.forEach(player => {
+            player.blocks.forEach(block => {
                 if(p_block.x === block.x && p_block.y === block.y){
                     return true
                 }
@@ -54,12 +54,14 @@ const logic = {
         })
         return ans
     },
-    will_hit_double: function(double, p_block){
-        console.log(double, p_block)
-        if(double.x === p_block.x && double.y === p_block.y){
-            return true
-        }
-        return false
+    will_hit_powerup: function(powers, p_block){
+        let ans = []
+        powers.forEach(power => {
+            if(double.x === p_block.x && double.y === p_block.y){
+                ans.push(power)
+            }
+        })
+        return ans
     }
 }
 export default logic

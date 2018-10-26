@@ -22,9 +22,9 @@ class Game extends React.Component {
             id: -1,
             name : this.props.name,
             player_data: [],
-            others_data: {},
+            others_data: [],
             food_data: [],
-            power_data: {},
+            power_data: [],
             player_power: {
                 double: 0
             },
