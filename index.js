@@ -12,6 +12,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 
+
 var server_data = {
     players : [],
     powers : [],
@@ -142,9 +143,8 @@ io.on('connection', function(socket){
     })
 
     socket.on('disconnect', function(){
-        console.log('user disconnected', player_name);
-        delete players[player_name]
-        console.log(players)
+        console.log('user disconnected', id)
+        server_data.remove_player(id)
     });
 });
 
@@ -171,7 +171,7 @@ setInterval(function(){
     }
     server_data.refill()
     let update_data = server_data.get_data()
-    io.sockets.emit('update', update_data.players, update_data.food, update_data.power);
+    io.sockets.emit('update', update_data.players, update_data.foods, update_data.powers);
 }, 100);
 
 http.listen(8080, 'localhost')

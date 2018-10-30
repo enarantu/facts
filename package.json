@@ -17,6 +17,7 @@
     "eslint-plugin-import": "==2.7.0",
     "eslint-plugin-jsx-a11y": "==5.1.1",
     "eslint-plugin-react": "==7.4.0",
+    "jest": "^23.6.0",
     "webpack": "==3.6.0"
   },
   "dependencies": {
@@ -40,7 +41,7 @@
     "socket.io": "^2.1.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "nodemon --trace-warnings index.js",
     "webpack": "webpack",
     "webpack:w": "webpack -w"

@@ -28,7 +28,7 @@ class Game extends React.Component {
             player_power: {
                 double: 0
             },
-            endpoint: 'localhost'
+            endpoint: '10.0.0.118'
         }
         this.ongoing = false
         this.socket = io(this.state.endpoint);
@@ -109,10 +109,9 @@ class Game extends React.Component {
         }
         
         this.state.player_data.push(head)
-        if(logic.will_hit_double(this.state.power_data.double, head)){
-            this.consume(head)
-        }
-        else{
+        const powerups = logic.will_hit_powerup(this.state.power_data.double, head)
+        if(powerups === [])
+        {
             const block = logic.will_hit_food(this.state.food_data, head)
             if(block.x >= 0 && block.y >= 0){
                 this.consume(head)
@@ -120,6 +119,11 @@ class Game extends React.Component {
             else{
                 this.state.player_data.shift()
             }
+        }
+        else{
+            powerups.forEach(powerups => {
+                
+            })
         }
     }
 
@@ -179,7 +183,6 @@ class Game extends React.Component {
                 break
             default:
                 return
-            console.log("NEWDIR:", this.newdir)
         }
     }
     render() {
