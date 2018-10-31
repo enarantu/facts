@@ -85,3 +85,13 @@ test('blocks equals test', ()=>{
     expect(e.equals(d)).toBe(false)
     expect(d.equals(e)).toBe(false)
 })
+
+test('blocks contains type test', () => {
+    let b = new Blocks([{x: 2 , y: 3},{x: 3 , y: 4},{x: 4 , y: 5},{x: 5 , y: 6}])
+    expect(b.contains_type('double')).toBe(false)
+    b.add({x: 2, y: 3, block_type: 'double'})
+    b.add({x: 2, y: 1})
+    expect(b.contains_type('double')).toBe(true)
+    expect(b.contains_type('half')).toBe(false)
+    expect(b.contains_type('woof')).toBe(false)
+})

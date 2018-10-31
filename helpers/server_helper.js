@@ -1,104 +1,57 @@
+const Blocks = require('./blocks')
+const Players = require('./players')
+
 class Helper{
     constructor(){
         this.foods = new Blocks()
         this.powers = new Blocks()
         this.players = new Players()
     }
-    add_player : function( name, blocks){
-        let max_id = 0
-        this.players.forEach( player => {
-            if( max_id < player.id){
-                max_id = player.id + 1
-            }
-        })
-        const data = {
-            id : max_id,
-            name : name,
-            blocks : blocks
-        }
-        this.players.push(data)
-        return max_id
+    new_player(name, blocks){
+        const inB = new Blocks(blocks)
+        return this.players.add(name, blocks)
     },
-    remove_player: function( id){
-        for( let i = this.players.length - 1; i >= 0; i--){
-            if( this.players[i].id === id){
-                this.players.splice(i, 1)
-            }
-        }
+    remove_player(id){
+        this.players.remove_player(id)
     },
-    update : function(id, blocks){
-        for( let i = 0; i < this.players.length ; i++){
-            if( this.players[i].id === id){
-                this.players[i].blocks = blocks
-            }
-        }
+    update(id, blocks){
+        const inB = new Blocks(blocks)
+        this.players.update(id, inB)
     },
-    consume: function( block ){
-        for( let i = this.foods.length - 1; i >= 0; i--){
-            if( this.foods[i].x === block.x && this.foods[i].y === block.y){
-                this.foods.splice(i, 1)
-            }
-        }
-        for( let i = this.powers.length - 1; i >= 0; i--){
-            if( this.powers[i].x === block.x && this.powers[i].y === block.y){
-                this.powers.splice(i, 1)
-            }
-        }
+    consume(block){
+        this.foods.remove_equal_block(block)
+        this.powers.remove_equal_block(block)
     },
-    generate : function(){
+    generate(){
         let xc = parseInt(Math.floor((Math.random() * 30)))*20
         let yc = parseInt(Math.floor((Math.random() * 30)))*20
         return {x : xc, y : yc}
     },
-    will_overlap : function(block){
-        ans = false
-        this.foods.forEach(food => {
-            if( food.x === block.x && food.y === block.y){
-                ans = true
-            }
-        })
-        this.powers.forEach(power => {
-            if( power.x === block.x && power.y === block.y){
-                ans = true
-            }
-        })
-        return ans
+    will_overlap(block){
+        return this.foods.contains(block) || this.powers.contains(block)
     },
-    refill: function(){
+    refill(){
         while(this.foods.length < 8){
             newfood = this.generate()
             while(this.will_overlap(newfood)){
                 newfood = this.generate()
             }
-            this.foods.push(newfood)
+            this.foods.add(newfood)
         }
-        let is_double_exist = false
-        this.powers.forEach(power => {
-            if( power.power_type === 'double'){
-                is_double_exist = true
-            }
-        })
-        if(!is_double_exist){
+        if(!this.powers.contains_type('double')){
             newdouble = this.generate()
             while(this.will_overlap(newdouble)){
                 newdouble = this.generate()
             }
-            newdouble.type = 'double'
+            newdouble.block_type = 'double'
             this.powers.push(newdouble)
         }
     },
-    set_data: function(id, blocks){
-        for( let i = 0 ; i < this.players.length ; i++){
-            if(this.players.id === id){
-                this.players.blocks = blocks
-            }
-        }
-    },
-    get_data: function(){
+    get_data(){
         return {
-            players: this.players,
-            foods: this.foods,
-            powers: this.powers
+            players: this.players.get_data(),
+            foods: this.foods.get_data(),
+            powers: this.powers.get_data()
         }
     }
 }

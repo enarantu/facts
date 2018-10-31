@@ -55,6 +55,13 @@ class Players{
         this.invariant()
         return specified_blocks.equals(blocks)
     }
+    get_data(){
+        return this.players.map(player => {
+            id : player.id,
+            name : player.name,
+            blocks. player.blocks.get_data()
+        })
+    }
     invariant(){
         let that = this
         function is_array(){
@@ -94,7 +101,6 @@ class Players{
             })
             return ans
         }
-        //console.assert([{x : 2, y : 2}, {x: 1, y: 2}] instanceof Blocks, "is it?")
         if(is_array()){
             if(is_id_integers()){
                 if(is_id_unique()){

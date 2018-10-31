@@ -5,13 +5,27 @@ class Blocks{
     contains(in_block){
         this.invariant()
         let does_contain = false
-        this.blocks.forEach(block =>{
+        this.blocks.forEach(block => {
             if(block.x === in_block.x && block.y === in_block.y){
                 does_contain = true
             }
         })
         this.invariant()
         return does_contain
+    }
+    contains_type(in_type){
+        this.invariant()
+        let does_contain = false
+        this.blocks.forEach(block => {
+            if(block.block_type === in_type){
+                does_contain = true
+            }
+        })
+        this.invariant()
+        return does_contain
+    }
+    length(){
+        return this.blocks.length
     }
     add(in_block){
         this.invariant()
@@ -43,6 +57,9 @@ class Blocks{
             }
         }
         this.invariant()
+    }
+    get_data(){
+        return this.blocks
     }
     invariant(){
         let that = this
