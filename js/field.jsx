@@ -61,9 +61,9 @@ class Field extends React.Component{
         const ctx = this.refs.canvas.getContext('2d')
         this.state.power_data.forEach(power => {
             if(power.block_type === 'double'){
-                ctx.fillStyle = "rgb(255,215,0)"
+                ctx.fillStyle = "rgb(255,0,0)"
                 ctx.beginPath()
-                ctx.arc(power.x + 10, power.y + 10, 6, 0, 2*Math.PI)
+                ctx.arc(power.x + 10, power.y + 10, 9, 0, 2*Math.PI)
                 ctx.fill()
             }
         })

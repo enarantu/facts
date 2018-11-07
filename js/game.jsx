@@ -49,7 +49,7 @@ class Game extends React.Component {
         this.id = -1
         this.name = this.props.name
         this.ongoing = false
-        this.socket = io('localhost');
+        this.socket = io('10.0.0.118');
         this.socket.on("update", (data1, data2, data3) => {
             for(let i = data1.length - 1; i >= 0; i--){
                 if(data1[i].id === this.id){
@@ -67,7 +67,6 @@ class Game extends React.Component {
             this.state.player_data = data
             this.id = id
             this.game_loop = setInterval(this.tick, 100)
-            this.ongoing = true
         })
         this.game_loop = null
         this.tick = this.tick.bind(this)
@@ -115,6 +114,7 @@ class Game extends React.Component {
         })
     }
     newgame(){
+        this.ongoing = true
         this.socket.emit("new-player", this.name)
     }
     tick_helper(){
@@ -140,7 +140,6 @@ class Game extends React.Component {
                 this.oe.boost()
                 this.consume(head)
                 this.state.player_data.push(head)
-                this.state.player_data.shift()
                 break
             default:
                 this.state.player_data.push(head)
@@ -193,9 +192,9 @@ class Game extends React.Component {
                 }
                     
                     <Progress value={this.oe.double} color='danger'/>
-                    <h2>Players</h2>
+                    <b>Online Players</b>
                     <Scoreboard data ={sprops}/>
-                    <h2>Your Highscore {this.highscore}</h2>
+                    <b>Your Highscore {this.highscore}</b>
                     {   !this.ongoing &&
                         <Button onClick={this.newgame} color='danger'>Retry</Button>
                     }
