@@ -37,6 +37,10 @@ class Direction{
         this.old = this.new
         return this.old
     }
+    restart(){
+        this.old = "R"
+        this.new = "R"
+    }
 }
 
 module.exports = Direction

@@ -32,6 +32,10 @@ class OddEven{
     boost(){
         this.double = 100
     }
+    restart(){
+        this.double = 0
+        this.even = true
+    }
 }
 
 class Game extends React.Component {
@@ -76,6 +80,7 @@ class Game extends React.Component {
         this.consume = this.consume.bind(this)
         this.update = this.update.bind(this)
         this.newgame = this.newgame.bind(this)
+        this.restart = this.restart.bind(this)
     }
     componentDidMount() {
         this.bindKeys()
@@ -96,15 +101,14 @@ class Game extends React.Component {
         clearInterval(this.game_loop)
         console.log("collision")
         this.ongoing = false
-        this.oe.double = 0
-        this.oe.even = true
+        this.oe.restart()
+        this.dir.restart()
     }
     consume(pos){
         this.socket.emit("request", {
             type : "consume",
             block : pos
         })
-        console.log("consume request sent", pos)
     }
     update(){
         this.socket.emit("request", {
@@ -112,6 +116,24 @@ class Game extends React.Component {
             id: this.id,
             blocks: this.state.player_data
         })
+    }
+    restart(){
+        this.state.player_data = [
+            {
+                x :  140,
+                y :  140
+            },
+            {
+                x : 160,
+                y : 140
+            },
+            {
+                x : 180,
+                y : 140
+            }
+        ]
+        this.ongoing = true
+        this.game_loop = setInterval(this.tick, 100)
     }
     newgame(){
         this.ongoing = true
@@ -196,7 +218,7 @@ class Game extends React.Component {
                     <Scoreboard data ={sprops}/>
                     <b>Your Highscore {this.highscore}</b>
                     {   !this.ongoing &&
-                        <Button onClick={this.newgame} color='danger'>Retry</Button>
+                        <Button onClick={this.restart} color='danger'>Retry</Button>
                     }
                     <b>{JSON.stringify(this.state)}</b>
                     <b>{JSON.stringify(this.id)}</b>
