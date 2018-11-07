@@ -58,7 +58,7 @@ function serve_request(req){
             server_data.consume(req.block)
             break
         case "over":
-            server_data.remove_player(req.id)
+            server_data.update(req.id, [])
             break
         default:
             break
