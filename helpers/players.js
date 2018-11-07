@@ -57,9 +57,11 @@ class Players{
     }
     get_data(){
         return this.players.map(player => {
-            id : player.id,
-            name : player.name,
-            blocks. player.blocks.get_data()
+            let object = {}
+            object.id = player.id
+            object.name = player.name,
+            object.blocks = player.blocks.get_data()
+            return object
         })
     }
     invariant(){

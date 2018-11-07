@@ -11,9 +11,9 @@ app.use('/', views)
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+var Helper = require('./helpers/helper')
 
-
-var server_data =
+var server_data = new Helper()
 var player_requests = []
 
 io.on('connection', function(socket){
@@ -33,13 +33,14 @@ io.on('connection', function(socket){
                 y : 140
             }
         ]
-        id = server_data.add_player(name, blocks)
+        id = server_data.new_player(name, blocks)
         socket.emit('new-player', blocks, id)
     });
 
     socket.on('request', function(req){
         player_requests.push(req)
     })
+
 
     socket.on('disconnect', function(){
         console.log('user disconnected', id)
@@ -51,7 +52,7 @@ io.on('connection', function(socket){
 function serve_request(req){
     switch(req.type){
         case "update":
-            server_data.set_data(req.id, req.blocks)
+            server_data.update(req.id, req.blocks)
             break
         case "consume":
             server_data.consume(req.block)

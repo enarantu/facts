@@ -6,35 +6,56 @@ import io from 'socket.io-client'
 import Field from './field'
 import Scoreboard from './scoreboard'
 import logic from './gamelogic'
+import Direction from './direction'
+import { Progress, Button } from 'reactstrap'
 
-var KEY = {
-    LEFT:  37,
-    RIGHT: 39,
-    UP: 38,
-    DOWN: 40
+class OddEven{
+    constructor(){
+        this.even = true
+        this.double = 0
+    }
+    get(){
+        if(this.even){
+            this.even = false
+            return true
+        }
+        else if(this.double > 0){
+            this.double--
+            this.even = true
+            return true
+        }
+        else{
+            this.even = true
+            return false
+        }
+    }
+    boost(){
+        this.double = 100
+    }
 }
-
 
 class Game extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            id: -1,
-            name : this.props.name,
             player_data: [],
             others_data: [],
             food_data: [],
-            power_data: [],
-            player_power: {
-                double: 0
-            },
-            endpoint: '10.0.0.118'
+            power_data: []
         }
+        this.highscore = 0
+        this.dir = new Direction()
+        this.oe = new OddEven()
+        this.id = -1
+        this.name = this.props.name
         this.ongoing = false
-        this.socket = io(this.state.endpoint);
+        this.socket = io('localhost');
         this.socket.on("update", (data1, data2, data3) => {
-            delete data1[this.state.name]
-            console.log('recieved update', data1, data2, data3)
+            for(let i = data1.length - 1; i >= 0; i--){
+                if(data1[i].id === this.id){
+                    data1.splice(i,1)
+                }
+            }
             this.state.others_data = data1
             this.state.food_data = data2
             this.state.power_data = data3
@@ -44,13 +65,10 @@ class Game extends React.Component {
         })
         this.socket.on("new-player", (data, id) => {
             this.state.player_data = data
-            this.state.id = id
+            this.id = id
             this.game_loop = setInterval(this.tick, 100)
             this.ongoing = true
         })
-        this.newdir = ''
-        this.dir = 'R'
-        this.even = true
         this.game_loop = null
         this.tick = this.tick.bind(this)
         this.handleKeys   = this.handleKeys.bind(this)
@@ -74,26 +92,30 @@ class Game extends React.Component {
         this.state.player_data = []
         this.socket.emit("request", {
             type : "over",
-            id : this.state.id,
+            id : this.id,
         })
         clearInterval(this.game_loop)
+        console.log("collision")
         this.ongoing = false
+        this.oe.double = 0
+        this.oe.even = true
     }
     consume(pos){
         this.socket.emit("request", {
             type : "consume",
             block : pos
         })
+        console.log("consume request sent", pos)
     }
     update(){
         this.socket.emit("request", {
             type: "update",
-            id: this.state.id,
+            id: this.id,
             blocks: this.state.player_data
         })
     }
     newgame(){
-        this.socket.emit("new-player", this.state.name)
+        this.socket.emit("new-player", this.name)
     }
     tick_helper(){
     /*
@@ -101,30 +123,31 @@ class Game extends React.Component {
     MODIFIES: locations of the snake
     EFFECTS: moves the snake
     */
-        const head = logic.prospective_block(this.state.player_data, this.dir)
-        if(logic.will_hit_wall(head) ||
-           logic.will_hit_self(this.state.player_data, head) ||
-           logic.will_hit_others(this.state.others_data, head) ) {
-            this.collision()
+        if(this.highscore < this.state.player_data.length){
+            this.highscore = this.state.player_data.length
+        }
+        const head = logic.prospective_block(this.state.player_data, this.dir.get_dir())
+        const outcome = logic.outcome(this.state.player_data, this.state.others_data, this.state.food_data, this.state.power_data, head)
+        switch(outcome){
+            case 'collision':
+                this.collision()
+                break
+            case 'food':
+                this.state.player_data.push(head)
+                this.consume(head)
+                break
+            case 'double':
+                this.oe.boost()
+                this.consume(head)
+                this.state.player_data.push(head)
+                this.state.player_data.shift()
+                break
+            default:
+                this.state.player_data.push(head)
+                this.state.player_data.shift()
+                break
         }
         
-        this.state.player_data.push(head)
-        const powerups = logic.will_hit_powerup(this.state.power_data.double, head)
-        if(powerups === [])
-        {
-            const block = logic.will_hit_food(this.state.food_data, head)
-            if(block.x >= 0 && block.y >= 0){
-                this.consume(head)
-            }
-            else{
-                this.state.player_data.shift()
-            }
-        }
-        else{
-            powerups.forEach(powerups => {
-                
-            })
-        }
     }
 
     tick(){
@@ -133,19 +156,11 @@ class Game extends React.Component {
         MODIFIES: everything
         EFFECTS: controls the game
         */
-        if(this.even || this.state.player_power.double > 0){
-            if( this.newdir !== ''){
-                this.dir = this.newdir
-                this.newdir = ''
-            }
-            this.tick_helper(this.state.player_data, this.dir, this.state.food_data)
-            if(!this.even){
-                this.state.player_power.double -= 1
-            }
+        if(this.oe.get()){
+            this.tick_helper()
         }
         this.update()
         this.setState({})
-        this.even = !this.even
     }
 
     bindKeys() {
@@ -155,47 +170,20 @@ class Game extends React.Component {
         window.removeEventListener('keydown', this.handleKeys);
     }
     handleKeys(e){
-        /*
-        REQUIRES: player has given a name and connected to the game
-        MODIFIES: new direction variable this.newdir
-        EFFECTS:  prepares this.newdir for the next frame
-        */
-        switch (e.keyCode) {
-            case KEY.LEFT:
-                if(this.dir !== "R"){
-                    this.newdir = "L"
-                }
-                break
-            case KEY.RIGHT:
-                if(this.dir !== "L"){
-                    this.newdir = "R"
-                }
-                break
-            case KEY.UP:
-                if(this.dir !== "D"){
-                    this.newdir = "U"
-                }
-                break;
-            case KEY.DOWN:
-                if(this.dir !== "U"){
-                    this.newdir = "D"
-                }
-                break
-            default:
-                return
-        }
+        this.dir.user_input(e.keyCode)
     }
     render() {
-        const tempObj = {}
-        tempObj[this.state.name] = this.state.player_data
-        const cdata = Object.assign(tempObj , this.state.others_data)
-        const sprops = Object.keys(cdata).map( name => {
+        const sprops = this.state.others_data.map(player => {
             return {
-                name : name,
-                score : cdata[name].length,
-                is_self : name === this.state.name
+                name : player.name,
+                score : player.blocks.length,
+                is_self : false
             }
-        })
+        }).concat([{
+            name : this.name,
+            score : this.state.player_data.length,
+            is_self : true
+        }])
         return (
             <div>
                 {<Field others_data = {this.state.others_data}
@@ -203,9 +191,14 @@ class Game extends React.Component {
                         food_data   = {this.state.food_data}
                         power_data  = {this.state.power_data}/>
                 }
-                {
+                    
+                    <Progress value={this.oe.double} color='danger'/>
+                    <h2>Players</h2>
                     <Scoreboard data ={sprops}/>
-                }
+                    <h2>Your Highscore {this.highscore}</h2>
+                    {   !this.ongoing &&
+                        <Button onClick={this.newgame} color='danger'>Retry</Button>
+                    }
             </div>
         )
     }

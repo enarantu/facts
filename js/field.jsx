@@ -7,10 +7,10 @@ class Field extends React.Component{
     constructor(props){
         super(props)
         this.state = {
-            others_data : {},
+            others_data : [],
             player_data : [],
             food_data: [],
-            power_data: {}
+            power_data: []
         }
     }
     componentDidMount(){
@@ -59,23 +59,24 @@ class Field extends React.Component{
     }
     draw_power(){
         const ctx = this.refs.canvas.getContext('2d')
-        if(this.state.power_data.hasOwnProperty("double")){
-            let coord = this.state.power_data.double
-            ctx.fillStyle = "rgb(255,215,0)"
-            ctx.beginPath()
-            ctx.arc(coord.x + 10, coord.y + 10, 6, 0, 2*Math.PI)
-            ctx.fill()
-        }
+        this.state.power_data.forEach(power => {
+            if(power.block_type === 'double'){
+                ctx.fillStyle = "rgb(255,215,0)"
+                ctx.beginPath()
+                ctx.arc(power.x + 10, power.y + 10, 6, 0, 2*Math.PI)
+                ctx.fill()
+            }
+        })
     }
     draw_others(){
         const ctx = this.refs.canvas.getContext('2d')
         ctx.fillStyle = "rgb(50,205,50)"
-        Object.keys(this.state.others_data).forEach( player => {
-            this.state.others_data[player].forEach( block => 
+        this.state.others_data.forEach( player => {
+            player.blocks.forEach( block => 
                 ctx.fillRect(block.x + 2, block.y + 2, 16, 16)
             )
-            if(this.state.others_data[player].length > 0){
-                let head = this.state.others_data[player][this.state.others_data[player].length - 1]
+            if(player.blocks.length > 0){
+                let head = player.blocks[player.blocks.length - 1]
                 ctx.fillRect(head.x , head.y , 20,20 )
             }
         })

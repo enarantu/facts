@@ -29,13 +29,11 @@ class ModalExample extends React.Component {
   render() {
     return (
       <div className="h-100 w-100 d-flex justify-content-center align-items-center bg-primary">
-          <input type="text" id="name" maxLength="5" size="5" style={{fontSize : 40}} onChange={this.handleChange}/>
+          <input type="text" id="name" maxLength="4" size="4" style={{fontSize : 40}} onChange={this.handleChange}/>
           <Button color="danger" onClick={this.toggle} style={{fontSize : 40}}>PLAY</Button>
-        <Modal size="lg" isOpen={this.state.modal} toggle={this.toggle}>
-          <ModalBody>
-            {<Game name = {this.state.name} />}
-          </ModalBody>
-          <Button color="secondary" onClick={this.toggle}>Cancel</Button>
+        <Modal isOpen={this.state.modal} toggle={this.toggle}>
+          {<Game name = {this.state.name} />}
+          <Button color="secondary" onClick={this.toggle}>Cancel</Button> 
         </Modal>
       </div>
     );

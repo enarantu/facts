@@ -1,6 +1,7 @@
 class Blocks{
     constructor(inB){
         this.blocks = inB
+        this.invariant()
     }
     contains(in_block){
         this.invariant()

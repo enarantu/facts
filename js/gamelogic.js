@@ -22,45 +22,45 @@ const logic = {
         }
         return head
     },
-    will_hit_self: function(blocks, p_block){
-        const n = blocks.length
-        for( let i = n - 2; i >= 0; i--){
-            if( blocks[i].x === p_block.x && blocks[i].y === p_block.y){
-                return true
-            }
+    outcome: function(blocks, others, foods, powers, p_block){
+        let ans = 'nothing'
+        let collision = (p_block.x < 0 || p_block.y < 0 || p_block.x >= 600 || p_block.y >= 600)
+        if(collision){
+            console.log("wall collision")
         }
-        return false
-    },
-    will_hit_others: function(others, p_block){
-        others.forEach(player => {
-            player.blocks.forEach(block => {
-                if(p_block.x === block.x && p_block.y === block.y){
-                    return true
+        if( !collision){
+            blocks.forEach(block => {
+                if(block.x === p_block.x && block.y === p_block.y){
+                    collision = true
+                    console.log("self collision")
                 }
             })
-        })
-        return false
-    },
-    will_hit_wall: function(p_block){
-        return p_block.x < 0 || p_block.y < 0 || p_block.x >= 600 || p_block.y >= 600
-    },
-
-    will_hit_food: function(foods,p_block){
-        let ans = {x : -1, y : -1}
-        foods.forEach(food => {
-            if(food.x === p_block.x && food.y === p_block.y){
-                ans = p_block
-            }
-        })
-        return ans
-    },
-    will_hit_powerup: function(powers, p_block){
-        let ans = []
-        powers.forEach(power => {
-            if(double.x === p_block.x && double.y === p_block.y){
-                ans.push(power)
-            }
-        })
+        }
+        if( !collision){
+            others.forEach(player => {
+                player.blocks.forEach(block => {
+                    if(p_block.x === block.x && p_block.y === block.y){
+                        collision = true
+                        console.log("inter collision")
+                    }
+                })
+            })
+        }
+        if(collision){
+            ans = 'collision'
+        }
+        else{
+            foods.forEach(food => {
+                if(food.x === p_block.x && food.y === p_block.y){
+                    ans = 'food'
+                }
+            })
+            powers.forEach(power => {
+                if(power.x === p_block.x && power.y === p_block.y){
+                    ans = power.block_type
+                }
+            })
+        }
         return ans
     }
 }
