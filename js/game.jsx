@@ -53,7 +53,7 @@ class Game extends React.Component {
         this.id = -1
         this.name = this.props.name
         this.ongoing = false
-        this.socket = io('10.0.0.118');
+        this.socket = io('https://localhost');
         this.socket.on("update", (data1, data2, data3) => {
             for(let i = data1.length - 1; i >= 0; i--){
                 if(data1[i].id === this.id){
