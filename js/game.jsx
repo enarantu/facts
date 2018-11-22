@@ -220,8 +220,6 @@ class Game extends React.Component {
                     {   !this.ongoing &&
                         <Button onClick={this.restart} color='danger'>Retry</Button>
                     }
-                    <b>{JSON.stringify(this.state)}</b>
-                    <b>{JSON.stringify(this.id)}</b>
             </div>
         )
     }
